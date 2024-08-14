@@ -97,7 +97,7 @@ pub use native_function::{FunctionMeta, NativeFunction};
 pub use raw_vc::{CellId, RawVc, ReadRawVcFuture, ResolveTypeError};
 pub use read_ref::ReadRef;
 use rustc_hash::FxHasher;
-pub use state::State;
+pub use state::{State, TransientState};
 pub use task::{task_input::TaskInput, SharedReference};
 pub use trait_ref::{IntoTraitRef, TraitRef};
 pub use turbo_tasks_macros::{function, value, value_impl, value_trait, TaskInput};
