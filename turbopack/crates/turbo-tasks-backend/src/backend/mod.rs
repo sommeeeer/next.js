@@ -1107,7 +1107,6 @@ impl Backend for TurboTasksBackend {
                 _ => unreachable!(),
             }));
         }
-        turbo_tasks.schedule(task_id);
         task_id
     }
     fn dispose_root_task(&self, _: TaskId, _: &dyn TurboTasksBackendApi<Self>) {
