@@ -48,7 +48,7 @@ use super::{
         TurbopackResult, VcArc,
     },
 };
-use crate::{register, util::log_panic_and_inform};
+use crate::register;
 
 /// Used by [`benchmark_file_io`]. This is a noisy benchmark, so set the
 /// threshold high.
@@ -716,18 +716,25 @@ pub fn project_hmr_events(
                 async move {
                     let project = project.project().resolve().await?;
                     let state = project.hmr_version_state(identifier.clone(), session);
-                    let update = hmr_update(project, identifier, state)
+
+                    let refresh: ReadRef<Update> = Update::Total(None).cell().await?;
+                    let Some(state) = &*state.await? else {
+                        // If there's no matching version state and no error was returned, refresh
+                        // the page.
+                        return Ok((refresh, Arc::new(vec![]), Arc::new(vec![])));
+                    };
+
+                    let update = hmr_update(project, identifier, *state)
                         .strongly_consistent()
-                        .await
-                        .inspect_err(|e| log_panic_and_inform(e))?;
+                        .await?;
                     let HmrUpdateWithIssues {
                         update,
                         issues,
                         diagnostics,
                     } = &*update;
                     match &**update {
-                        Update::None => {}
-                        Update::Total(TotalUpdate { to }) => {
+                        Update::None | Update::Total(None) => {}
+                        Update::Total(Some(TotalUpdate { to })) => {
                             state.set(to.clone()).await?;
                         }
                         Update::Partial(PartialUpdate { to, .. }) => {
