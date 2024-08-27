@@ -5,7 +5,11 @@ import React, { use } from 'react'
 import { createFromReadableStream } from 'react-server-dom-webpack/client'
 
 import { HeadManagerContext } from '../shared/lib/head-manager-context.shared-runtime'
-import { onRecoverableError } from './on-recoverable-error'
+import {
+  onRecoverableError,
+  onCaughtError,
+  onUncaughtError,
+} from './react-client-callbacks'
 import { callServer } from './app-call-server'
 import {
   type AppRouterActionQueue,
@@ -242,6 +246,12 @@ export function hydrate() {
 
   const options = {
     onRecoverableError,
+    ...(process.env.__NEXT_PPR
+      ? {
+          onCaughtError,
+          onUncaughtError,
+        }
+      : undefined),
   } satisfies ReactDOMClient.RootOptions
   const isError =
     document.documentElement.id === '__next_error__' || hasMissingTags

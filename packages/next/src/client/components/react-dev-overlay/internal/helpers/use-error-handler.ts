@@ -1,8 +1,8 @@
 import { useEffect } from 'react'
-
 import { isNextRouterError } from '../../../is-next-router-error'
 import { isHydrationError } from '../../../is-hydration-error'
 import { attachHydrationErrorState } from './attach-hydration-error-state'
+import { getReactStitchedError } from './stitched-error'
 
 export type ErrorHandler = (error: Error) => void
 
@@ -19,12 +19,13 @@ const rejectionQueue: Array<Error> = []
 const errorHandlers: Array<ErrorHandler> = []
 const rejectionHandlers: Array<ErrorHandler> = []
 
-export function handleClientError(error: unknown) {
-  if (!error || !(error instanceof Error) || typeof error.stack !== 'string') {
+export function handleClientError(err: unknown) {
+  if (!err || !(err instanceof Error) || typeof err.stack !== 'string') {
     // A non-error was thrown, we don't have anything to show. :-(
     return
   }
 
+  const error = getReactStitchedError(err)
   attachHydrationErrorState(error)
 
   // Only queue one hydration every time
@@ -46,11 +47,13 @@ if (typeof window !== 'undefined') {
   window.addEventListener(
     'error',
     (event: WindowEventMap['error']): void | boolean => {
+      console.log('window error event', event.error)
       if (isNextRouterError(event.error)) {
         event.preventDefault()
         return false
       }
-      handleClientError(event.error)
+      const err = getReactStitchedError(event.error)
+      handleClientError(err)
     }
   )
 
@@ -58,6 +61,7 @@ if (typeof window !== 'undefined') {
     'unhandledrejection',
     (ev: WindowEventMap['unhandledrejection']): void => {
       const reason = ev?.reason
+      console.log('unhandledrejection', reason)
       if (
         !reason ||
         !(reason instanceof Error) ||
@@ -67,7 +71,7 @@ if (typeof window !== 'undefined') {
         return
       }
 
-      const e = reason
+      const e = getReactStitchedError(reason)
       rejectionQueue.push(e)
       for (const handler of rejectionHandlers) {
         handler(e)

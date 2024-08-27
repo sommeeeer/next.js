@@ -12,6 +12,7 @@ import { ComponentStyles } from '../internal/styles/ComponentStyles'
 import { CssReset } from '../internal/styles/CssReset'
 import { RootLayoutMissingTagsError } from '../internal/container/root-layout-missing-tags-error'
 import type { Dispatcher } from './hot-reloader-client'
+import { getReactStitchedError } from '../internal/helpers/stitched-error'
 
 interface ReactDevOverlayState {
   reactError: SupportedErrorEvent | null
@@ -27,7 +28,8 @@ export default class ReactDevOverlay extends React.PureComponent<
 > {
   state = { reactError: null }
 
-  static getDerivedStateFromError(error: Error): ReactDevOverlayState {
+  static getDerivedStateFromError(err: Error): ReactDevOverlayState {
+    const error = getReactStitchedError(err)
     if (!error.stack) return { reactError: null }
     return {
       reactError: {
