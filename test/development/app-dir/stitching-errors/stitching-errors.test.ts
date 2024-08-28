@@ -1,15 +1,68 @@
 import { nextTestSetup } from 'e2e-utils'
-import { waitFor } from 'next-test-utils'
+import { retry } from 'next-test-utils'
 
 describe('stitching errors', () => {
   const { next } = nextTestSetup({
     files: __dirname,
   })
 
-  it('should work using cheerio', async () => {
-    const browser = await next.browser('/')
-    await browser.waitForElementByCss('button')
+  it('should log stitched error for browser errors', async () => {
+    const browser = await next.browser('/browser')
+    const logs = await browser.log()
 
-    await waitFor(60 * 1000)
+    await retry(() => {
+      expect(logs).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            // Original error stack
+            message: expect.stringContaining('at useThrowError'),
+          }),
+        ])
+      )
+      expect(logs).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            // Stitched error stack
+            message: expect.stringContaining('at AppRouter'),
+          }),
+        ])
+      )
+      expect(logs).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            // Extra info of original component
+            message: expect.stringContaining(
+              'The above error occurred in the <Page> component. It was handled by the <ReactDevOverlay> error boundary.'
+            ),
+          }),
+        ])
+      )
+    })
+  })
+
+  it('should log stitched error for SSR errors', async () => {
+    const browser = await next.browser('/ssr')
+    const logs = await browser.log()
+
+    await retry(() => {
+      expect(logs).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            // Original error stack
+            message: expect.stringContaining('at useThrowError'),
+          }),
+        ])
+      )
+      expect(logs).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            // Extra info of original component
+            message: expect.stringContaining(
+              'The above error occurred in the <Page> component. It was handled by the <ReactDevOverlay> error boundary.'
+            ),
+          }),
+        ])
+      )
+    })
   })
 })

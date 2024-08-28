@@ -2,7 +2,6 @@ import { useEffect } from 'react'
 import { isNextRouterError } from '../../../is-next-router-error'
 import { isHydrationError } from '../../../is-hydration-error'
 import { attachHydrationErrorState } from './attach-hydration-error-state'
-import { getReactStitchedError } from './stitched-error'
 
 export type ErrorHandler = (error: Error) => void
 
@@ -19,13 +18,12 @@ const rejectionQueue: Array<Error> = []
 const errorHandlers: Array<ErrorHandler> = []
 const rejectionHandlers: Array<ErrorHandler> = []
 
-export function handleClientError(err: unknown) {
-  if (!err || !(err instanceof Error) || typeof err.stack !== 'string') {
+export function handleClientError(error: unknown) {
+  if (!error || !(error instanceof Error) || typeof error.stack !== 'string') {
     // A non-error was thrown, we don't have anything to show. :-(
     return
   }
 
-  const error = getReactStitchedError(err)
   attachHydrationErrorState(error)
 
   // Only queue one hydration every time
@@ -52,8 +50,7 @@ if (typeof window !== 'undefined') {
         event.preventDefault()
         return false
       }
-      const err = getReactStitchedError(event.error)
-      handleClientError(err)
+      handleClientError(event.error)
     }
   )
 
@@ -71,7 +68,7 @@ if (typeof window !== 'undefined') {
         return
       }
 
-      const e = reason // getReactStitchedError(reason)
+      const e = reason
       rejectionQueue.push(e)
       for (const handler of rejectionHandlers) {
         handler(e)

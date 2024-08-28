@@ -5,11 +5,7 @@ import React, { use } from 'react'
 import { createFromReadableStream } from 'react-server-dom-webpack/client'
 
 import { HeadManagerContext } from '../shared/lib/head-manager-context.shared-runtime'
-import {
-  onRecoverableError,
-  onCaughtError,
-  onUncaughtError,
-} from './react-client-callbacks'
+import { onRecoverableError, onCaughtError } from './react-client-callbacks'
 import { callServer } from './app-call-server'
 import {
   type AppRouterActionQueue,
@@ -246,10 +242,10 @@ export function hydrate() {
 
   const options = {
     onRecoverableError,
-    ...(process.env.__NEXT_PPR
+    ...(process.env.__NEXT_PPR && process.env.NODE_ENV === 'development'
       ? {
           onCaughtError,
-          onUncaughtError,
+          // we don't need to customize onUncaughtError in dev as all errors are captured by dev overlay
         }
       : undefined),
   } satisfies ReactDOMClient.RootOptions

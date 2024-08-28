@@ -7,31 +7,25 @@ const REACT_ERROR_STACK_BOTTOM_FRAME_REGEX = new RegExp(
   `(at ${REACT_ERROR_STACK_BOTTOM_FRAME} )|(${REACT_ERROR_STACK_BOTTOM_FRAME}\\@)`
 )
 
-export function getReactStitchedError<T = unknown>(err: T): T {
-  const error = err instanceof Error ? err : new Error(err + '')
-  const stackLines = (error.stack || '').split('\n')
+export function getReactStitchedError<T = unknown>(err: T): string {
+  // const error = err instanceof Error ? err : new Error(err + '')
+  const originStack = err instanceof Error ? err.stack || '' : ''
+  const stackLines = originStack.split('\n')
   const indexOfSplit = stackLines.findIndex((line) =>
     REACT_ERROR_STACK_BOTTOM_FRAME_REGEX.test(line)
   )
   const isOriginalReactError = indexOfSplit >= 0 // has the react-stack-bottom-frame
   let newStack = isOriginalReactError
     ? stackLines.slice(0, indexOfSplit).join('\n')
-    : error.stack || ''
+    : originStack
 
   // Avoid duplicate overriding stack frames
-
   const ownerStack = captureOwnerStack()
-  console.log(
-    'ownerStack',
-    ownerStack,
-    'newStack.endsWith(ownerStack) === false',
-    newStack.endsWith(ownerStack) === false
-  )
   if (ownerStack && newStack.endsWith(ownerStack) === false) {
     newStack += ownerStack
     // Override stack
-    ;(err as any).stack = newStack
+    return newStack
   }
 
-  return err
+  return originStack
 }

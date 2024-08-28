@@ -29,15 +29,15 @@ export default class ReactDevOverlay extends React.PureComponent<
   state = { reactError: null }
 
   static getDerivedStateFromError(err: Error): ReactDevOverlayState {
-    const error = getReactStitchedError(err)
-    if (!error.stack) return { reactError: null }
+    const stitchedStack = getReactStitchedError(err)
+    if (!stitchedStack) return { reactError: null }
     return {
       reactError: {
         id: 0,
         event: {
           type: ACTION_UNHANDLED_ERROR,
-          reason: error,
-          frames: parseStack(error.stack),
+          reason: err,
+          frames: parseStack(stitchedStack),
         },
       },
     }
