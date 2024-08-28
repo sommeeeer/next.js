@@ -71,7 +71,7 @@ if (typeof window !== 'undefined') {
         return
       }
 
-      const e = getReactStitchedError(reason)
+      const e = reason // getReactStitchedError(reason)
       rejectionQueue.push(e)
       for (const handler of rejectionHandlers) {
         handler(e)
