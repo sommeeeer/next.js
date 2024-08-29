@@ -15,15 +15,14 @@ export const onRecoverableError: HydrationOptions['onRecoverableError'] = (
   err,
   errorInfo
 ) => {
+  if (isBailoutToCSRError(err)) return
+
   const stitchedError = getReactStitchedError(err)
   // In development mode, pass along the component stack to the error
   if (process.env.NODE_ENV === 'development' && errorInfo.componentStack) {
     ;(stitchedError as any)._componentStack = errorInfo.componentStack
   }
-  // Using default react onRecoverableError
-
   // Skip certain custom errors which are not expected to be reported on client
-  if (isBailoutToCSRError(stitchedError)) return
 
   reportGlobalError(stitchedError)
 }
@@ -32,6 +31,9 @@ export const onCaughtError: HydrationOptions['onCaughtError'] = (
   err,
   errorInfo
 ) => {
+  // Skip certain custom errors which are not expected to be reported on client
+  if (isBailoutToCSRError(err)) return
+
   const stitchedError = getReactStitchedError(err)
 
   if (process.env.NODE_ENV === 'development') {

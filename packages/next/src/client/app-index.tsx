@@ -22,7 +22,10 @@ import { MissingSlotContext } from '../shared/lib/app-router-context.shared-runt
 const origConsoleError = window.console.error
 window.console.error = (...args) => {
   // See https://github.com/facebook/react/blob/d50323eb845c5fde0d720cae888bf35dedd05506/packages/react-reconciler/src/ReactFiberErrorLogger.js#L78
-  const error = process.env.NODE_ENV !== 'production' ? args[1] : args[0]
+  const error =
+    process.env.NODE_ENV !== 'production' && process.env.__NEXT_PPR !== 'true'
+      ? args[1]
+      : args[0]
   if (!isNextRouterError(error)) {
     if (process.env.NODE_ENV !== 'production') {
       const { storeHydrationErrorStateFromConsoleArgs } =
@@ -242,7 +245,8 @@ export function hydrate() {
 
   const options = {
     onRecoverableError,
-    ...(process.env.__NEXT_PPR && process.env.NODE_ENV === 'development'
+    ...(process.env.__NEXT_PPR === 'true' &&
+    process.env.NODE_ENV === 'development'
       ? {
           onCaughtError,
           // we don't need to customize onUncaughtError in dev as all errors are captured by dev overlay
