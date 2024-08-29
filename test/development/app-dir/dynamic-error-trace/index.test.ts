@@ -44,7 +44,7 @@ describe('app dir - dynamic error trace', () => {
       AppRouter
       ../src/client/app-index.tsx (193:6)"
     `
-        : ''
+        : `""`
     )
 
     const codeframe = await getRedboxSource(browser)
