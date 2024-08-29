@@ -42,7 +42,7 @@ describe('app dir - dynamic error trace', () => {
       actionQueue
       ../src/client/components/app-router.tsx (610:28)
       AppRouter
-      ../src/client/app-index.tsx (193:6)"
+      ../src/client/app-index.tsx (206:6)"
     `
         : `""`
     )
