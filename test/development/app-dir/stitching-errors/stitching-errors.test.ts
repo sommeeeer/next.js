@@ -1,5 +1,5 @@
 import { nextTestSetup } from 'e2e-utils'
-import { retry } from 'next-test-utils'
+import { assertHasRedbox, retry } from 'next-test-utils'
 
 describe('stitching errors', () => {
   const { next } = nextTestSetup({
@@ -17,18 +17,10 @@ describe('stitching errors', () => {
             // Original error stack
             message: expect.stringContaining('at useThrowError'),
           }),
-        ])
-      )
-      expect(logs).toEqual(
-        expect.arrayContaining([
           expect.objectContaining({
             // Stitched error stack
             message: expect.stringContaining('at AppRouter'),
           }),
-        ])
-      )
-      expect(logs).toEqual(
-        expect.arrayContaining([
           expect.objectContaining({
             // Extra info of original component
             message: expect.stringContaining(
@@ -44,17 +36,15 @@ describe('stitching errors', () => {
     const browser = await next.browser('/ssr')
     const logs = await browser.log()
 
-    await retry(() => {
+    await retry(async () => {
+      await assertHasRedbox(browser)
+
       expect(logs).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             // Original error stack
             message: expect.stringContaining('at useThrowError'),
           }),
-        ])
-      )
-      expect(logs).toEqual(
-        expect.arrayContaining([
           expect.objectContaining({
             // Extra info of original component
             message: expect.stringContaining(

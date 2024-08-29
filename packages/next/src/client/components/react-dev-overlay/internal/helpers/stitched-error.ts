@@ -23,6 +23,7 @@ export function getReactStitchedError<T = unknown>(err: T): Error {
   const newError = new Error(originMessage)
   // Copy all enumerable properties, e.g. digest
   Object.assign(newError, err)
+  newError.stack = newStack
 
   // Avoid duplicate overriding stack frames
   const ownerStack = captureOwnerStack()

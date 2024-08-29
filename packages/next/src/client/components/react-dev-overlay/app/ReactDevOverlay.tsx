@@ -36,7 +36,7 @@ export default class ReactDevOverlay extends React.PureComponent<
         id: 0,
         event: {
           type: ACTION_UNHANDLED_ERROR,
-          reason: err,
+          reason: stitchedError,
           frames: parseStack(stitchedError.stack || ''),
         },
       },

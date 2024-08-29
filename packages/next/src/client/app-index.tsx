@@ -5,7 +5,11 @@ import React, { use } from 'react'
 import { createFromReadableStream } from 'react-server-dom-webpack/client'
 
 import { HeadManagerContext } from '../shared/lib/head-manager-context.shared-runtime'
-import { onRecoverableError, onCaughtError } from './react-client-callbacks'
+import {
+  onRecoverableError,
+  onCaughtError,
+  onUncaughtError,
+} from './react-client-callbacks'
 import { callServer } from './app-call-server'
 import {
   type AppRouterActionQueue,
@@ -18,14 +22,20 @@ import type { InitialRSCPayload } from '../server/app-render/types'
 import { createInitialRouterState } from './components/router-reducer/create-initial-router-state'
 import { MissingSlotContext } from '../shared/lib/app-router-context.shared-runtime'
 
+// process.env.__NEXT_PPR is set to boolean through define plugin
+const isPPR = !!process.env.__NEXT_PPR
+
 // Patch console.error to collect information about hydration errors
 const origConsoleError = window.console.error
 window.console.error = (...args) => {
   // See https://github.com/facebook/react/blob/d50323eb845c5fde0d720cae888bf35dedd05506/packages/react-reconciler/src/ReactFiberErrorLogger.js#L78
   const error =
-    process.env.NODE_ENV !== 'production' || process.env.__NEXT_PPR !== 'true'
-      ? args[1]
+    process.env.NODE_ENV !== 'production'
+      ? isPPR
+        ? args[1] || args[0]
+        : args[1]
       : args[0]
+
   if (!isNextRouterError(error)) {
     if (process.env.NODE_ENV !== 'production') {
       const { storeHydrationErrorStateFromConsoleArgs } =
@@ -245,11 +255,10 @@ export function hydrate() {
 
   const options = {
     onRecoverableError,
-    ...(process.env.__NEXT_PPR === 'true' &&
-    process.env.NODE_ENV === 'development'
+    ...(isPPR && process.env.NODE_ENV !== 'production'
       ? {
           onCaughtError,
-          // we don't need to customize onUncaughtError in dev as all errors are captured by dev overlay
+          onUncaughtError,
         }
       : undefined),
   } satisfies ReactDOMClient.RootOptions
