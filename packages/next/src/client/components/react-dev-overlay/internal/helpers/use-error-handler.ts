@@ -45,7 +45,6 @@ if (typeof window !== 'undefined') {
   window.addEventListener(
     'error',
     (event: WindowEventMap['error']): void | boolean => {
-      console.log('window error event', event.error)
       if (isNextRouterError(event.error)) {
         event.preventDefault()
         return false
@@ -58,7 +57,6 @@ if (typeof window !== 'undefined') {
     'unhandledrejection',
     (ev: WindowEventMap['unhandledrejection']): void => {
       const reason = ev?.reason
-      console.log('unhandledrejection', reason)
       if (
         !reason ||
         !(reason instanceof Error) ||

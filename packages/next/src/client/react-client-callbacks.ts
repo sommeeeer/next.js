@@ -15,25 +15,25 @@ export const onRecoverableError: HydrationOptions['onRecoverableError'] = (
   err,
   errorInfo
 ) => {
-  const error = getReactStitchedError(err)
+  const stitchedError = getReactStitchedError(err)
   // In development mode, pass along the component stack to the error
   if (process.env.NODE_ENV === 'development' && errorInfo.componentStack) {
-    ;(error as any)._componentStack = errorInfo.componentStack
+    ;(stitchedError as any)._componentStack = errorInfo.componentStack
   }
   // Using default react onRecoverableError
 
   // Skip certain custom errors which are not expected to be reported on client
-  if (isBailoutToCSRError(error)) return
+  if (isBailoutToCSRError(stitchedError)) return
 
-  reportGlobalError(error)
+  reportGlobalError(stitchedError)
 }
 
 export const onCaughtError: HydrationOptions['onCaughtError'] = (
   err,
   errorInfo
 ) => {
-  const stack = getReactStitchedError(err)
-  // console.log('onCaughtError', err, errorInfo)
+  const stitchedError = getReactStitchedError(err)
+
   if (process.env.NODE_ENV === 'development') {
     const errorBoundaryComponent = errorInfo?.errorBoundary?.constructor
     const errorBoundaryName =
@@ -49,12 +49,18 @@ export const onCaughtError: HydrationOptions['onCaughtError'] = (
       componentThatErroredFrame?.match(/\s+at (\w+)\s+|(\w+)@/) ?? []
     const componentThatErroredName = matches[1] || matches[2] || 'Unknown'
 
-    const log =
-      stack +
+    // In development mode, pass along the component stack to the error
+    if (process.env.NODE_ENV === 'development' && errorInfo.componentStack) {
+      ;(stitchedError as any)._componentStack = errorInfo.componentStack
+    }
+
+    // Modify the stack trace with errored component and error boundary, to match the behavior of default React onCaughtError handler.
+    stitchedError.stack +=
       '\n\n' +
       `The above error occurred in the <${componentThatErroredName}> component. It was handled by the <${errorBoundaryName}> error boundary.`
 
-    console.error(log)
+    // Always log the modified error instance so the console.error interception side can pick it up easily without constructing an error again.
+    console.error(stitchedError)
   } else {
     console.error(err)
   }
