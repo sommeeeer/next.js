@@ -1,5 +1,5 @@
-import { cookies } from "next/headers"
+import { cookies } from "next/headers";
 
 export default async function Page() {
-  callSomething(await cookies())
+  callSomething(await cookies());
 }

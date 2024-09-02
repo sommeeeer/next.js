@@ -1,5 +1,5 @@
-import { cookies } from "next/headers"
+import { cookies } from "next/headers";
 
 function MyComponent() {
-  callSomething(cookies())
+  callSomething(cookies());
 }

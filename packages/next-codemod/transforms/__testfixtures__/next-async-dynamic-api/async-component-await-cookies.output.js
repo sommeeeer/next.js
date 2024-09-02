@@ -1,5 +1,5 @@
-import { cookies } from "next/headers"
+import { cookies } from "next/headers";
 
 async function MyComponent() {
-  callSomething(await cookies())
+  callSomething(await cookies());
 }

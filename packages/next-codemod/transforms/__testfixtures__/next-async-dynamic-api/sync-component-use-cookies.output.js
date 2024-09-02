@@ -1,6 +1,6 @@
-import { use } from "react"
-import { cookies } from "next/headers"
+import { use } from "react";
+import { cookies } from "next/headers";
 
 function MyComponent() {
-  callSomething(use(cookies()))
+  callSomething(use(cookies()));
 }
