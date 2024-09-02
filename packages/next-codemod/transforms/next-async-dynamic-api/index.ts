@@ -8,6 +8,9 @@ export default function transform(file: FileInfo, api: API) {
   // Check if 'use' from 'react' needs to be imported
   let needsReactUseImport = false
 
+  const isClientComponent =
+    root.find(j.Literal, { value: 'use client' }).size() > 0
+
   function processCalls(functionName: 'cookies' | 'headers') {
     // Process each call to cookies() or headers()
     root
@@ -18,15 +21,46 @@ export default function transform(file: FileInfo, api: API) {
         },
       })
       .forEach((path) => {
-        const isClientEnvironment =
-          root.find(j.Literal, { value: 'use client' }).size() > 0
+        // Find if it's under an if statement,
+        // if yes add a TODO comment
+        let currentPath = path.parentPath
+        let isUnderCondition = false
+        while (currentPath) {
+          if (j.IfStatement.check(currentPath.node)) {
+            isUnderCondition = true
+            break
+          }
+          currentPath = currentPath.parentPath
+        }
+        if (isUnderCondition) {
+          const todoCommentContent = ` TODO: move ${functionName}() outside of the condition`
 
+          const parent = path.parentPath.node
+          const comment = j.commentLine(todoCommentContent, true, false)
+
+          if (Array.isArray(parent.body)) {
+            // If the parent is a block statement, find the index of the current node and insert the comment before
+            const index = parent.body.indexOf(path.node)
+            if (index !== -1) {
+              parent.body.splice(index, 0, comment)
+            }
+          } else {
+            // For other types of parents (e.g., ExpressionStatement), add the comment directly
+            parent.comments = parent.comments || []
+            parent.comments.push(comment)
+          }
+
+          modified = true
+          return
+        }
+
+        // Check if available to apply transform
         const closestFunction = j(path).closest(j.FunctionDeclaration)
         const isAsyncFunction = closestFunction
           .nodes()
           .some((node) => node.async)
 
-        if (isClientEnvironment || !isAsyncFunction) {
+        if (isClientComponent || !isAsyncFunction) {
           // Wrap cookies() with use() from 'react'
           j(path).replaceWith(
             j.callExpression(j.identifier('use'), [
