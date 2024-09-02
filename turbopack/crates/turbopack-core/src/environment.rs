@@ -34,6 +34,8 @@ pub enum ChunkLoading {
     NodeJs,
     /// <script> and <link> tags in the browser
     Dom,
+    /// Web Workers, using importScripts
+    WebWorker,
 }
 
 #[turbo_tasks::value]

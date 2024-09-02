@@ -37,6 +37,9 @@ pub async fn get_browser_runtime_code(
     let runtime_backend_code = embed_static_code(
         asset_context,
         match chunk_loading {
+            ChunkLoading::WebWorker => {
+                "browser/dev/runtime/web-worker/runtime-backend-web-worker.ts".into()
+            }
             ChunkLoading::Edge => "browser/dev/runtime/edge/runtime-backend-edge.ts".into(),
             // This case should never be hit.
             ChunkLoading::NodeJs => {
