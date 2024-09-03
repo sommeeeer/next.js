@@ -1,7 +1,7 @@
 'use client'
 
 function useThrowError() {
-  throw new Error('inner error')
+  throw new Error('ssr error')
 }
 
 function useErrorHook() {

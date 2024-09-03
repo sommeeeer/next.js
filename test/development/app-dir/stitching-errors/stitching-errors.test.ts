@@ -1,5 +1,23 @@
 import { nextTestSetup } from 'e2e-utils'
-import { assertHasRedbox, retry } from 'next-test-utils'
+import { assertHasRedbox, assertNoRedbox } from 'next-test-utils'
+
+// Remove the location `()` part in every line of stack trace
+function normalizeStackTrace(trace) {
+  return trace.replace(/\(.*\)/g, '')
+}
+
+async function getStackFramesContent(browser) {
+  const stackFrameElements = await browser.elementsByCss(
+    '[data-nextjs-call-stack-frame]'
+  )
+  const stackFramesContent = (
+    await Promise.all(stackFrameElements.map((f) => f.innerText()))
+  )
+    .filter(Boolean)
+    .join('\n')
+
+  return normalizeStackTrace(stackFramesContent)
+}
 
 describe('stitching errors', () => {
   const { next } = nextTestSetup({
@@ -8,77 +26,106 @@ describe('stitching errors', () => {
 
   it('should log stitched error for browser uncaught errors', async () => {
     const browser = await next.browser('/browser/uncaught')
-    const logs = await browser.log()
 
-    await retry(() => {
-      expect(logs).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            // Original error stack
-            message: expect.stringContaining('at useThrowError'),
-          }),
-          expect.objectContaining({
-            // Stitched error stack
-            message: expect.stringContaining('at AppRouter'),
-          }),
-          expect.objectContaining({
-            // Extra info of original component
-            message: expect.stringContaining(
-              'The above error occurred in the <Page> component. It was handled by the <ReactDevOverlay> error boundary.'
-            ),
-          }),
-        ])
-      )
-    })
+    await assertHasRedbox(browser)
+
+    const stackFramesContent = await getStackFramesContent(browser)
+    expect(stackFramesContent).toMatchInlineSnapshot(`
+      "useThrowError
+      app/browser/uncaught/page.js 
+      useErrorHook
+      app/browser/uncaught/page.js 
+      ReactDevOverlay
+      ../src/client/components/react-dev-overlay/app/hot-reloader-client.tsx 
+      assetPrefix
+      ../src/client/components/app-router.tsx 
+      actionQueue
+      ../src/client/components/app-router.tsx 
+      AppRouter
+      ../src/client/app-index.tsx "
+    `)
+
+    const logs = await browser.log()
+    const errorLog = logs.find((log) => {
+      return log.message.includes('Error: browser error')
+    }).message
+
+    expect(normalizeStackTrace(errorLog)).toMatchInlineSnapshot(`
+      "Error: browser error
+          at useThrowError 
+          at useErrorHook 
+          at Page 
+          at NotFoundBoundary 
+          at DevRootNotFoundBoundary 
+          at Router 
+          at AppRouter 
+          at ServerRoot 
+
+      The above error occurred in the <Page> component. It was handled by the <ReactDevOverlay> error boundary."
+    `)
   })
 
   it('should log stitched error for browser caught errors', async () => {
     const browser = await next.browser('/browser/caught')
-    const logs = await browser.log()
 
-    await retry(() => {
-      expect(logs).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            // Original error stack
-            message: expect.stringContaining('at useThrowError'),
-          }),
-          expect.objectContaining({
-            // Stitched error stack
-            message: expect.stringContaining('at ClientPageRoot'),
-          }),
-          expect.objectContaining({
-            // Extra info of caught boundary
-            message: expect.stringContaining(
-              'The above error occurred in the <Thrower> component. It was handled by the <MyErrorBoundary> error boundary.'
-            ),
-          }),
-        ])
-      )
-    })
+    await assertNoRedbox(browser)
+
+    const logs = await browser.log()
+    const errorLog = logs.find((log) => {
+      return log.message.includes('Error: browser error')
+    }).message
+
+    expect(normalizeStackTrace(errorLog)).toMatchInlineSnapshot(`
+      "Error: browser error
+          at useThrowError 
+          at useErrorHook 
+          at Thrower 
+          at Inner 
+          at Page 
+          at ClientPageRoot 
+
+      The above error occurred in the <Thrower> component. It was handled by the <MyErrorBoundary> error boundary."
+    `)
   })
 
   it('should log stitched error for SSR errors', async () => {
     const browser = await next.browser('/ssr')
+
+    await assertHasRedbox(browser)
+
+    const stackFramesContent = await getStackFramesContent(browser)
+    expect(stackFramesContent).toMatchInlineSnapshot(`
+      "useThrowError
+      app/ssr/page.js 
+      useErrorHook
+      app/ssr/page.js 
+      ReactDevOverlay
+      ../src/client/components/react-dev-overlay/app/hot-reloader-client.tsx 
+      assetPrefix
+      ../src/client/components/app-router.tsx 
+      actionQueue
+      ../src/client/components/app-router.tsx 
+      AppRouter
+      ../src/client/app-index.tsx "
+    `)
+
     const logs = await browser.log()
+    const errorLog = logs.find((log) => {
+      return log.message.includes('Error: ssr error')
+    }).message
 
-    await retry(async () => {
-      await assertHasRedbox(browser)
+    expect(normalizeStackTrace(errorLog)).toMatchInlineSnapshot(`
+      "Error: ssr error
+          at useThrowError 
+          at useErrorHook 
+          at Page 
+          at NotFoundBoundary 
+          at DevRootNotFoundBoundary 
+          at Router 
+          at AppRouter 
+          at ServerRoot 
 
-      expect(logs).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            // Original error stack
-            message: expect.stringContaining('at useThrowError'),
-          }),
-          expect.objectContaining({
-            // Extra info of original component
-            message: expect.stringContaining(
-              'The above error occurred in the <Page> component. It was handled by the <ReactDevOverlay> error boundary.'
-            ),
-          }),
-        ])
-      )
-    })
+      The above error occurred in the <Page> component. It was handled by the <ReactDevOverlay> error boundary."
+    `)
   })
 })
