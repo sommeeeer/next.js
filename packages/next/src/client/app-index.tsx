@@ -22,8 +22,7 @@ import type { InitialRSCPayload } from '../server/app-render/types'
 import { createInitialRouterState } from './components/router-reducer/create-initial-router-state'
 import { MissingSlotContext } from '../shared/lib/app-router-context.shared-runtime'
 
-// process.env.__NEXT_PPR is set to boolean through define plugin
-const isPPR = !!process.env.__NEXT_PPR
+const isReactOwnerStackEnabled = !!process.env.__NEXT_REACT_OWNER_STACK
 
 // Patch console.error to collect information about hydration errors
 const origConsoleError = window.console.error
@@ -31,7 +30,7 @@ window.console.error = (...args) => {
   // See https://github.com/facebook/react/blob/d50323eb845c5fde0d720cae888bf35dedd05506/packages/react-reconciler/src/ReactFiberErrorLogger.js#L78
   const error =
     process.env.NODE_ENV !== 'production'
-      ? isPPR
+      ? isReactOwnerStackEnabled
         ? args[1] || args[0]
         : args[1]
       : args[0]
@@ -255,7 +254,7 @@ export function hydrate() {
 
   const options = {
     onRecoverableError,
-    ...(isPPR && process.env.NODE_ENV !== 'production'
+    ...(isReactOwnerStackEnabled && process.env.NODE_ENV !== 'production'
       ? {
           onCaughtError,
           onUncaughtError,

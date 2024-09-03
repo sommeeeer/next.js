@@ -7,7 +7,7 @@ describe('stitching errors', () => {
   })
 
   it('should log stitched error for browser uncaught errors', async () => {
-    const browser = await next.browser('/uncaught')
+    const browser = await next.browser('/browser/uncaught')
     const logs = await browser.log()
 
     await retry(() => {
@@ -33,7 +33,7 @@ describe('stitching errors', () => {
   })
 
   it('should log stitched error for browser caught errors', async () => {
-    const browser = await next.browser('/caught')
+    const browser = await next.browser('/browser/caught')
     const logs = await browser.log()
 
     await retry(() => {

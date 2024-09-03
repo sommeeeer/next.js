@@ -1,6 +1,8 @@
 import React from 'react'
 
-const captureOwnerStack = (React as any).captureOwnerStack ?? (() => '')
+const captureOwnerStack = process.env.__NEXT_REACT_OWNER_STACK
+  ? (React as any).captureOwnerStack
+  : () => ''
 
 const REACT_ERROR_STACK_BOTTOM_FRAME = 'react-stack-bottom-frame'
 const REACT_ERROR_STACK_BOTTOM_FRAME_REGEX = new RegExp(
