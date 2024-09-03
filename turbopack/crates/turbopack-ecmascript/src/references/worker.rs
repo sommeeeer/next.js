@@ -66,22 +66,13 @@ impl WorkerAssetReference {
 }
 
 fn worker_resolve_reference_inline(reference: &WorkerAssetReference) -> Vc<ModuleResolveResult> {
-    // TODO this should use URL resolution instead of ESM resolution
-    // but url_resolve results in a StaticModuleAsset
-    esm_resolve(
+    url_resolve(
         reference.origin,
         reference.request,
-        Value::new(EcmaScriptModulesReferenceSubType::DynamicImport),
-        try_to_severity(reference.in_try),
+        Value::new(ReferenceType::Worker),
         Some(reference.issue_source),
+        try_to_severity(reference.in_try),
     )
-    // url_resolve(
-    //     reference.origin,
-    //     reference.request,
-    //     Value::new(ReferenceType::Url(UrlReferenceSubType::EcmaScriptNewUrl)),
-    //     Some(reference.issue_source),
-    //     try_to_severity(reference.in_try),
-    // )
 }
 
 #[turbo_tasks::value_impl]
@@ -106,7 +97,7 @@ impl ValueToString for WorkerAssetReference {
 impl ChunkableModuleReference for WorkerAssetReference {
     #[turbo_tasks::function]
     fn chunking_type(&self) -> Vc<ChunkingTypeOption> {
-        Vc::cell(Some(ChunkingType::Async))
+        Vc::cell(Some(ChunkingType::Isolated))
     }
 }
 
