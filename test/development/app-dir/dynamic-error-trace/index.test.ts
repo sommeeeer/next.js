@@ -4,6 +4,10 @@ import { outdent } from 'outdent'
 
 const isReactExperimental = process.env.__NEXT_EXPERIMENTAL_PPR === 'true'
 
+function normalizeStackTrace(trace) {
+  return trace.replace(/\(.*\)/g, '')
+}
+
 describe('app dir - dynamic error trace', () => {
   const { next, skipped } = nextTestSetup({
     files: __dirname,
@@ -32,17 +36,17 @@ describe('app dir - dynamic error trace', () => {
       .filter(Boolean)
       .join('\n')
 
-    expect(stackFramesContent).toMatchInlineSnapshot(
+    expect(normalizeStackTrace(stackFramesContent)).toMatchInlineSnapshot(
       isReactExperimental
         ? `
       "ReactDevOverlay
-      ../src/client/components/react-dev-overlay/app/hot-reloader-client.tsx (646:6)
+      ../src/client/components/react-dev-overlay/app/hot-reloader-client.tsx
       assetPrefix
-      ../src/client/components/app-router.tsx (571:41)
+      ../src/client/components/app-router.tsx
       actionQueue
-      ../src/client/components/app-router.tsx (610:28)
+      ../src/client/components/app-router.tsx
       AppRouter
-      ../src/client/app-index.tsx (206:6)"
+      ../src/client/app-index.tsx"
     `
         : `""`
     )

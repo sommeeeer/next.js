@@ -2,6 +2,8 @@ import type { HydrationOptions } from 'react-dom/client'
 import { isBailoutToCSRError } from '../shared/lib/lazy-dynamic/bailout-to-csr'
 import { getReactStitchedError } from './components/react-dev-overlay/internal/helpers/stitched-error'
 import { originConsoleError } from './components/react-dev-overlay/patch-console'
+import { handleClientError } from './components/react-dev-overlay/internal/helpers/use-error-handler'
+import isError from '../lib/is-error'
 
 const reportGlobalError =
   typeof reportError === 'function'
@@ -60,8 +62,10 @@ export const onCaughtError: HydrationOptions['onCaughtError'] = (
     // Create error location with errored component and error boundary, to match the behavior of default React onCaughtError handler.
     const errorLocation = `The above error occurred in the <${componentThatErroredName}> component. It was handled by the <${errorBoundaryName}> error boundary.`
 
+    const originErrorStack = isError(err) ? err.stack || '' : ''
     // Always log the modified error instance so the console.error interception side can pick it up easily without constructing an error again.
-    originConsoleError(stitchedError.stack + '\n\n' + errorLocation)
+    originConsoleError(originErrorStack + '\n\n' + errorLocation)
+    handleClientError(stitchedError)
   } else {
     console.error(err)
   }
@@ -93,7 +97,6 @@ export const onUncaughtError: HydrationOptions['onUncaughtError'] = (
     const errorLocation = `The above error occurred in the <${componentThatErroredName}> component.`
 
     originConsoleError(stitchedError.stack + '\n\n' + errorLocation)
-
     // Always log the modified error instance so the console.error interception side can pick it up easily without constructing an error again.
     reportGlobalError(stitchedError)
   } else {

@@ -119,6 +119,7 @@ pub async fn get_next_client_import_map(
             let react_flavor = if *next_config.enable_ppr().await?
                 || *next_config.enable_taint().await?
                 || *next_config.enable_dynamic_io().await?
+                || *next_config.enable_react_owner_stack().await?
             {
                 "-experimental"
             } else {
