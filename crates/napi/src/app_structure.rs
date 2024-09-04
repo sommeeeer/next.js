@@ -2,6 +2,7 @@ use std::{collections::HashMap, path::MAIN_SEPARATOR};
 
 use anyhow::{anyhow, Result};
 use indexmap::IndexMap;
+use next_api::project::WatchOptions;
 use next_core::app_structure::{
     find_app_dir, get_entrypoints as get_entrypoints_impl, Components, Entrypoint, Entrypoints,
     LoaderTree, MetadataItem, MetadataWithAltItem,
@@ -14,10 +15,15 @@ use turbo_tasks_fs::{DiskFileSystem, FileSystem, FileSystemPath};
 use turbopack_core::PROJECT_FILESYSTEM_NAME;
 
 #[turbo_tasks::function]
-async fn project_fs(project_dir: RcStr, watching: bool) -> Result<Vc<Box<dyn FileSystem>>> {
+async fn project_fs(
+    project_dir: RcStr,
+    watch_options: WatchOptions,
+) -> Result<Vc<Box<dyn FileSystem>>> {
     let disk_fs = DiskFileSystem::new(PROJECT_FILESYSTEM_NAME.into(), project_dir, vec![]);
-    if watching {
-        disk_fs.await?.start_watching_with_invalidation_reason()?;
+    if watch_options.enable {
+        disk_fs
+            .await?
+            .start_watching_with_invalidation_reason(watch_options.poll_interval)?;
     }
     Ok(Vc::upcast(disk_fs))
 }
@@ -329,10 +335,10 @@ async fn get_value(
     root_dir: RcStr,
     project_dir: RcStr,
     page_extensions: Vec<RcStr>,
-    watching: bool,
+    watch_options: WatchOptions,
 ) -> Result<Vc<OptionEntrypointsForJs>> {
     let page_extensions = Vc::cell(page_extensions);
-    let fs = project_fs(root_dir.clone(), watching);
+    let fs = project_fs(root_dir.clone(), watch_options);
     let project_relative = project_dir.strip_prefix(&*root_dir).unwrap();
     let project_relative = project_relative
         .strip_prefix(MAIN_SEPARATOR)

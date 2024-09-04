@@ -1,4 +1,4 @@
-use std::{any::Any, fmt::Debug, hash::Hash};
+use std::{any::Any, fmt::Debug, hash::Hash, time::Duration};
 
 use anyhow::Result;
 use async_trait::async_trait;
@@ -45,7 +45,8 @@ impl_task_input! {
     usize,
     RcStr,
     TaskId,
-    ValueTypeId
+    ValueTypeId,
+    Duration
 }
 
 #[async_trait]

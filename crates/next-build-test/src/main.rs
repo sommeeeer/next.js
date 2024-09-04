@@ -153,7 +153,7 @@ fn main() {
                 },
                 project_path: canonical_path.to_string_lossy().into(),
                 root_path: "/".into(),
-                watch: false,
+                watch: Default::default(),
             };
 
             let json = serde_json::to_string_pretty(&options).unwrap();

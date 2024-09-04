@@ -79,6 +79,15 @@ export interface NapiDraftModeOptions {
   previewModeEncryptionKey: string
   previewModeSigningKey: string
 }
+export interface NapiWatchOptions {
+  /** Whether to watch the filesystem for file changes. */
+  enable: boolean
+  /**
+   * Enable polling at a certain interval if the native file watching doesn't work (e.g.
+   * docker).
+   */
+  pollIntervalMs?: number
+}
 export interface NapiProjectOptions {
   /**
    * A root path from which all files must be nested under. Trying to access
@@ -92,8 +101,8 @@ export interface NapiProjectOptions {
    * deserializing next.config, so passing it as separate option.
    */
   distDir?: string
-  /** Whether to watch he filesystem for file changes. */
-  watch: boolean
+  /** Filesystem watcher options. */
+  watch: NapiWatchOptions
   /** The contents of next.config.js, serialized to JSON. */
   nextConfig: string
   /** The contents of ts/config read by load-jsconfig, serialized to JSON. */
@@ -128,8 +137,8 @@ export interface NapiPartialProjectOptions {
    * deserializing next.config, so passing it as separate option.
    */
   distDir?: string | undefined | null
-  /** Whether to watch he filesystem for file changes. */
-  watch?: boolean
+  /** Filesystem watcher options. */
+  watch?: NapiWatchOptions
   /** The contents of next.config.js, serialized to JSON. */
   nextConfig?: string
   /** The contents of ts/config read by load-jsconfig, serialized to JSON. */

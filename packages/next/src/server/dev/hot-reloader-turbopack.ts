@@ -132,7 +132,10 @@ export async function createHotReloaderTurbopack(
       rootPath: opts.nextConfig.outputFileTracingRoot || dir,
       nextConfig: opts.nextConfig,
       jsConfig: await getTurbopackJsConfig(dir, nextConfig),
-      watch: true,
+      watch: {
+        enable: true,
+        pollIntervalMs: nextConfig.watchOptions?.pollIntervalMs,
+      },
       dev: true,
       env: process.env as Record<string, string>,
       defineEnv: createDefineEnv({
