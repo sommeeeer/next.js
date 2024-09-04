@@ -5,7 +5,7 @@ import { outdent } from 'outdent'
 const isReactExperimental = process.env.__NEXT_EXPERIMENTAL_PPR === 'true'
 
 function normalizeStackTrace(trace) {
-  return trace.replace(/\(.*\)/g, '')
+  return trace.replace(/ \(.*\)/g, '')
 }
 
 describe('app dir - dynamic error trace', () => {

@@ -37,7 +37,10 @@ export function handleClientError(error: unknown) {
     handler(error)
   }
 }
-if (typeof window !== 'undefined') {
+
+let listened = false
+if (!listened && typeof window !== 'undefined') {
+  listened = true
   // These event handlers must be added outside of the hook because there is no
   // guarantee that the hook will be alive in a mounted component in time to
   // when the errors occur.
